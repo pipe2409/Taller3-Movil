@@ -1,5 +1,6 @@
 package com.example.taller3_movil.ui.viewmodel
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -35,7 +36,7 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
             viewModelScope.launch {
                 val user = repository.getUserData(uid)
                 _currentUser.value = user
-                _authState.value = AuthState.Authenticated
+                if (user != null) _authState.value = AuthState.Authenticated
             }
         }
     }
@@ -47,7 +48,7 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
             if (result.isSuccess) {
                 checkCurrentUser()
             } else {
-                _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+                _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Error de login")
             }
         }
     }
@@ -65,7 +66,7 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
             if (result.isSuccess) {
                 checkCurrentUser()
             } else {
-                _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+                _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Error de registro")
             }
         }
     }
@@ -76,11 +77,22 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
         _authState.value = AuthState.Idle
     }
 
-    fun updateProfile(updatedUser: User) {
+    fun updateProfile(updatedUser: User, newImageUri: Uri? = null) {
         viewModelScope.launch {
-            val result = repository.updateUserData(updatedUser)
-            if (result.isSuccess) {
-                _currentUser.value = updatedUser
+            _authState.value = AuthState.Loading
+            try {
+                var finalUser = updatedUser
+                if (newImageUri != null) {
+                    val imageUrl = repository.uploadProfilePicture(updatedUser.uid, newImageUri)
+                    finalUser = updatedUser.copy(profilePictureUrl = imageUrl)
+                }
+                val result = repository.updateUserData(finalUser)
+                if (result.isSuccess) {
+                    _currentUser.value = finalUser
+                    _authState.value = AuthState.Authenticated
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Error al actualizar")
             }
         }
     }

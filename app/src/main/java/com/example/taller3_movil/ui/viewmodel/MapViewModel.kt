@@ -1,7 +1,6 @@
 package com.example.taller3_movil.ui.viewmodel
 
 import android.annotation.SuppressLint
-import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.taller3_movil.data.model.User
@@ -30,11 +29,10 @@ class MapViewModel(
     private val _userPath = MutableStateFlow<List<LatLng>>(emptyList())
     val userPath = _userPath.asStateFlow()
 
-    // Map of userId to their path
     private val _othersPaths = MutableStateFlow<Map<String, List<LatLng>>>(emptyMap())
     val othersPaths = _othersPaths.asStateFlow()
 
-    private var locationJob: Job? = null
+    private var currentUserId: String? = null
     private var usersJob: Job? = null
 
     private val locationCallback = object : LocationCallback() {
@@ -59,15 +57,20 @@ class MapViewModel(
         usersJob = viewModelScope.launch {
             userRepository.getConnectedUsers().collect { users ->
                 _otherUsers.value = users
-                // Update paths for other users (simplified: just showing their current pos in path for now)
-                // In a real app, you'd store their previous positions to draw polylines.
-                // For the workshop, we can track them locally while the app is open.
+                val connectedUids = users.map { it.uid }.toSet()
                 val currentOthersPaths = _othersPaths.value.toMutableMap()
+                
+                // Remove paths for users who are no longer connected
+                val uidsToRemove = currentOthersPaths.keys.filter { it !in connectedUids }
+                uidsToRemove.forEach { currentOthersPaths.remove(it) }
+
                 users.forEach { user ->
-                    val pos = LatLng(user.latitude, user.longitude)
-                    val path = currentOthersPaths[user.uid] ?: emptyList()
-                    if (path.isEmpty() || path.last() != pos) {
-                        currentOthersPaths[user.uid] = path + pos
+                    if (user.uid != currentUserId) {
+                        val pos = LatLng(user.latitude, user.longitude)
+                        val path = currentOthersPaths[user.uid] ?: emptyList()
+                        if (path.isEmpty() || path.last() != pos) {
+                            currentOthersPaths[user.uid] = path + pos
+                        }
                     }
                 }
                 _othersPaths.value = currentOthersPaths
@@ -76,15 +79,16 @@ class MapViewModel(
     }
 
     fun toggleConnection(uid: String, connected: Boolean) {
+        currentUserId = uid
         _isConnected.value = connected
         if (!connected) {
             _userPath.value = emptyList()
             stopLocationUpdates()
+            viewModelScope.launch {
+                userRepository.setConnectionStatus(uid, false)
+            }
         } else {
             startLocationUpdates()
-        }
-        viewModelScope.launch {
-            userRepository.setConnectionStatus(uid, connected)
         }
     }
 
@@ -101,8 +105,11 @@ class MapViewModel(
     }
 
     private fun updateUserLocationInFirestore(latLng: LatLng) {
-        // We'll need the current user's UID. For simplicity, we can pass it or get it from Auth.
-        // Assuming we have it or use a placeholder for now.
+        currentUserId?.let { uid ->
+            viewModelScope.launch {
+                userRepository.updateLocation(uid, latLng.latitude, latLng.longitude, true)
+            }
+        }
     }
 
     override fun onCleared() {
