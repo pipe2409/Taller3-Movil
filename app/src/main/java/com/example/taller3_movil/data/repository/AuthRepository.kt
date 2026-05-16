@@ -55,6 +55,15 @@ class AuthRepository {
         }
     }
 
+    suspend fun updatePassword(newPassword: String): Result<Unit> {
+        return try {
+            auth.currentUser?.updatePassword(newPassword)?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun uploadProfilePicture(uid: String, imageUri: Uri): String {
         val ref = storage.reference.child("profile_pictures/$uid.jpg")
         ref.putFile(imageUri).await()

@@ -52,7 +52,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-    // Navigation (Nombre corregido: libs.androidx.navigation.compose)
+    // Navigation
     implementation(libs.androidx.navigation.compose)
 
     // Firebase
@@ -66,7 +66,7 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
 
-    // Coil for images
+    // Coil
     implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
