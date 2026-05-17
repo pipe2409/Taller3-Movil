@@ -77,15 +77,24 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
         _authState.value = AuthState.Idle
     }
 
-    fun updateProfile(updatedUser: User, newImageUri: Uri? = null) {
+    fun updateProfile(updatedUser: User, newImageUri: Uri? = null, newPassword: String = "") {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
                 var finalUser = updatedUser
+                
                 if (newImageUri != null) {
                     val imageUrl = repository.uploadProfilePicture(updatedUser.uid, newImageUri)
                     finalUser = updatedUser.copy(profilePictureUrl = imageUrl)
                 }
+                
+                if (newPassword.isNotEmpty()) {
+                    val passResult = repository.updatePassword(newPassword)
+                    if (passResult.isFailure) {
+                        throw passResult.exceptionOrNull() ?: Exception("Error al actualizar contraseña")
+                    }
+                }
+                
                 val result = repository.updateUserData(finalUser)
                 if (result.isSuccess) {
                     _currentUser.value = finalUser

@@ -10,7 +10,7 @@ kotlin = "2.1.0"
 composeBom = "2024.11.00"
 googleServices = "4.4.2"
 firebaseBom = "33.10.0"
-mapsCompose = "6.4.1"
+mapsCompose = "6.1.2"
 playServicesMaps = "19.0.0"
 playServicesLocation = "21.3.0"
 navigationCompose = "2.8.8"
@@ -45,6 +45,7 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 
 # Maps & Location
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
