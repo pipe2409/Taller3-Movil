@@ -1,1 +1,4 @@
 /build
+
+# No compartir la configuración de Firebase
+google-services.json
