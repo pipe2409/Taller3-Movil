@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +17,7 @@ import com.example.taller3_movil.ui.screens.ProfileScreen
 import com.example.taller3_movil.ui.screens.RegisterScreen
 import com.example.taller3_movil.ui.theme.Taller3MovilTheme
 import com.example.taller3_movil.ui.viewmodel.AuthViewModel
+import com.example.taller3_movil.ui.viewmodel.AuthViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,8 +33,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation() {
+    val context = LocalContext.current
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
+    
+    // Usamos el Factory para pasar el contexto al Repositorio
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(context)
+    )
 
     NavHost(navController = navController, startDestination = Screen.Login.route) {
         composable(Screen.Login.route) {

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val repository: AuthRepository = AuthRepository()) : ViewModel() {
+class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
     var email by mutableStateOf("")
     var password by mutableStateOf("")
@@ -98,11 +98,17 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
                 val result = repository.updateUserData(finalUser)
                 if (result.isSuccess) {
                     _currentUser.value = finalUser
-                    _authState.value = AuthState.Authenticated
+                    _authState.value = AuthState.Success
                 }
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Error al actualizar")
             }
+        }
+    }
+    
+    fun resetAuthState() {
+        if (_currentUser.value != null) {
+            _authState.value = AuthState.Authenticated
         }
     }
 }
@@ -111,5 +117,6 @@ sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
     object Authenticated : AuthState()
+    object Success : AuthState()
     data class Error(val message: String) : AuthState()
 }
